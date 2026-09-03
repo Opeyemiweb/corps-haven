@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit — Corps Haven</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<header class="site-header">
+  <a class="brand" href="index.html">Corps Haven</a>
+  <button class="nav-toggle" onclick="document.querySelector('nav').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="housing.html">Housing</a>
+    <a href="placements.html">Placements</a>
+    <a href="submit.html" class="active">Submit</a>
+  </nav>
+</header>
+
+<main class="narrow">
+  <div class="section-heading">Submit a listing</div>
+  <p class="section-sub">Reviewed by an admin before it appears publicly — usually doesn't take long.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('housing')">Housing</button>
+    <button class="tab-btn" onclick="switchTab('placement')">Placement</button>
+  </div>
+
+  <div id="housing-panel" class="tab-panel active">
+    <form id="housing-form">
+      <label for="h-title">Title</label>
+      <input id="h-title" required maxlength="120" placeholder="e.g. Self-contain near NYSC Secretariat">
+
+      <label for="h-area">Area / Location</label>
+      <input id="h-area" required maxlength="80" placeholder="e.g. Awka, Anambra">
+
+      <label for="h-type">House type</label>
+      <select id="h-type" required>
+        <option value="">Select type</option>
+        <option>Self-contain</option>
+        <option>1 Bedroom</option>
+        <option>2 Bedroom</option>
+        <option>3 Bedroom</option>
+        <option>Shared Apartment</option>
+        <option>Other</option>
+      </select>
+
+      <label for="h-price">Price (₦ per year, unless stated otherwise)</label>
+      <input id="h-price" type="number" required min="1" placeholder="e.g. 150000">
+
+      <label for="h-description">Description</label>
+      <textarea id="h-description" maxlength="2000" placeholder="Details about the place, condition, what's included, etc."></textarea>
+
+      <label for="h-image">Photo (optional)</label>
+      <input id="h-image" type="file" accept="image/*">
+      <div class="hint">JPG or PNG, under 5MB. Listings with a photo get noticed faster.</div>
+      <img id="h-image-preview" class="image-preview" alt="Preview">
+
+      <label for="h-phone">Contact phone number</label>
+      <input id="h-phone" required placeholder="e.g. 08012345678">
+      <div class="hint">Digits only, 10–14 characters. Shown publicly so people can reach you.</div>
+
+      <button type="submit" id="h-submit-btn">Submit for review</button>
+      <div id="housing-message" class="form-message"></div>
+    </form>
+  </div>
+
+  <div id="placement-panel" class="tab-panel">
+    <form id="placement-form">
+      <label for="p-company">Company name</label>
+      <input id="p-company" required maxlength="120" placeholder="e.g. Greenfield Consulting Ltd">
+
+      <label for="p-industry">Industry</label>
+      <input id="p-industry" required maxlength="80" placeholder="e.g. Marketing, Tech, Education">
+
+      <label for="p-area">Area / Location</label>
+      <input id="p-area" required maxlength="80" placeholder="e.g. Awka, Anambra">
+
+      <label for="p-role">Role description</label>
+      <textarea id="p-role" required maxlength="2000" placeholder="What the role involves, expectations, etc."></textarea>
+
+      <label for="p-requirements">Requirements (optional)</label>
+      <textarea id="p-requirements" maxlength="1000" placeholder="Any specific skills, courses, or experience needed"></textarea>
+
+      <label for="p-phone">Contact phone (optional if email given)</label>
+      <input id="p-phone" placeholder="e.g. 08012345678">
+
+      <label for="p-email">Contact email (optional if phone given)</label>
+      <input id="p-email" type="email" placeholder="e.g. hr@company.com">
+      <div class="hint">At least one contact method is required.</div>
+
+      <button type="submit" id="p-submit-btn">Submit for review</button>
+      <div id="placement-message" class="form-message"></div>
+    </form>
+  </div>
+</main>
+
+<footer>Corps Haven — a community board for NYSC corps members.</footer>
+
+<script src="config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add("active");
+    document.getElementById(`${tab}-panel`).classList.add("active");
+  }
+
+  function showMessage(elId, text, isError) {
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = "form-message " + (isError ? "error" : "success");
+  }
+
+  const phonePattern = /^\+?[0-9]{10,14}$/;
+
+  // Image preview
+  document.getElementById("h-image").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById("h-image-preview");
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    } else {
+      preview.style.display = "none";
+    }
+  });
+
+  async function uploadImageIfPresent() {
+    const fileInput = document.getElementById("h-image");
+    const file = fileInput.files[0];
+    if (!file) return null;
+
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error: uploadError } = await client.storage
+      .from("listing-images")
+      .upload(path, file);
+
+    if (uploadError) {
+      throw new Error("Image upload failed: " + uploadError.message);
+    }
+
+    const { data } = client.storage.from("listing-images").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  document.getElementById("housing-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById("h-phone").value.trim();
+    const btn = document.getElementById("h-submit-btn");
+
+    if (!phonePattern.test(phone)) {
+      showMessage("housing-message", "Please enter a valid phone number (10–14 digits).", true);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+
+    try {
+      const { error: rateError } = await client.rpc("enforce_submission_rate_limit", {
+        p_contact: phone,
+        p_table: "housing_listings",
+        p_max_per_day: 3
+      });
+      if (rateError) throw new Error(rateError.message);
+
+      const imageUrl = await uploadImageIfPresent();
+
+      const { error } = await client.from("housing_listings").insert({
+        title: document.getElementById("h-title").value.trim(),
+        area: document.getElementById("h-area").value.trim(),
+        house_type: document.getElementById("h-type").value,
+        price: Number(document.getElementById("h-price").value),
+        description: document.getElementById("h-description").value.trim(),
+        contact_phone: phone,
+        image_url: imageUrl,
+        status: "pending"
+      });
+      if (error) throw new Error(error.message);
+
+      showMessage("housing-message", "Submitted! Your listing will appear once an admin approves it.", false);
+      document.getElementById("housing-form").reset();
+      document.getElementById("h-image-preview").style.display = "none";
+    } catch (err) {
+      showMessage("housing-message", "Something went wrong: " + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit for review";
+    }
+  });
+
+  document.getElementById("placement-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById("p-phone").value.trim();
+    const email = document.getElementById("p-email").value.trim();
+    const btn = document.getElementById("p-submit-btn");
+
+    if (!phone && !email) {
+      showMessage("placement-message", "Please provide a phone number or an email.", true);
+      return;
+    }
+    if (phone && !phonePattern.test(phone)) {
+      showMessage("placement-message", "Please enter a valid phone number (10–14 digits).", true);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+
+    try {
+      const contactForRateLimit = phone || email;
+      const { error: rateError } = await client.rpc("enforce_submission_rate_limit", {
+        p_contact: contactForRateLimit,
+        p_table: "placements",
+        p_max_per_day: 3
+      });
+      if (rateError) throw new Error(rateError.message);
+
+      const { error } = await client.from("placements").insert({
+        company_name: document.getElementById("p-company").value.trim(),
+        industry: document.getElementById("p-industry").value.trim(),
+        area: document.getElementById("p-area").value.trim(),
+        role_description: document.getElementById("p-role").value.trim(),
+        requirements: document.getElementById("p-requirements").value.trim() || null,
+        contact_phone: phone || null,
+        contact_email: email || null,
+        status: "pending"
+      });
+      if (error) throw new Error(error.message);
+
+      showMessage("placement-message", "Submitted! Your listing will appear once an admin approves it.", false);
+      document.getElementById("placement-form").reset();
+    } catch (err) {
+      showMessage("placement-message", "Something went wrong: " + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit for review";
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Corps Haven — find verified housing and open placements near your NYSC Place of Primary Assignment, shared by corps members for corps members.">
+<title>Corps Haven — Housing & Placements for NYSC Corps Members</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<header class="site-header">
+  <a class="brand" href="index.html">Corps Haven</a>
+  <button class="nav-toggle" onclick="document.querySelector('nav').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+  <nav>
+    <a href="index.html" class="active">Home</a>
+    <a href="housing.html">Housing</a>
+    <a href="placements.html">Placements</a>
+    <a href="submit.html">Submit</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-kicker">FOR NYSC CORPS MEMBERS</div>
+  <h1>A place to<br>land, and <span class="accent">work<br>that fits.</span></h1>
+  <p>Housing and placements shared directly by corps members who've already found what you're looking for — reviewed before they go live, so you're not guessing.</p>
+  <div class="hero-actions">
+    <a href="housing.html" class="btn btn-primary">Browse Housing</a>
+    <a href="placements.html" class="btn btn-outline">Browse Placements</a>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stats-grid">
+    <div>
+      <div class="stat-num" id="stat-housing">—</div>
+      <div class="stat-label">Housing listings live</div>
+    </div>
+    <div>
+      <div class="stat-num" id="stat-placements">—</div>
+      <div class="stat-label">Open placements</div>
+    </div>
+    <div>
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Reviewed before posting</div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="feature-grid">
+    <div>
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1V15a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.5a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V10"/></svg>
+      </div>
+      <h3>Verified housing</h3>
+      <p>Every listing is checked by an admin before it's visible — no scam addresses, no dead contacts.</p>
+    </div>
+    <div>
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>
+      </div>
+      <h3>Real placements</h3>
+      <p>Companies open to hosting corps members, with roles, requirements, and direct contact details.</p>
+    </div>
+    <div>
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <h3>Corps member to corps member</h3>
+      <p>Built by people who've done this before — no agents, no hidden fees, just direct connections.</p>
+    </div>
+  </div>
+
+  <div class="badge-strip">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+      Admin reviewed
+    </div>
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+      Free to use
+    </div>
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+      Direct contact, no middleman
+    </div>
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+      Community submitted
+    </div>
+  </div>
+
+  <div class="section-heading" style="padding-top:56px;">How it works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><h3>Browse or submit</h3><p>Look through housing and placement listings, or submit your own to help the next corps member.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><h3>It gets reviewed</h3><p>An admin checks every submission before it goes public, to keep listings accurate and safe.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><h3>Connect directly</h3><p>Once approved, contact details are shown so you can reach out — no accounts, no waiting.</p></div>
+    </div>
+  </div>
+</main>
+
+<div class="cta-band">
+  <h2>Know a place, or a placement?</h2>
+  <p>If it helped you, it can help the next corps member too. Takes under two minutes to submit.</p>
+  <a href="submit.html" class="btn btn-primary">Submit a listing</a>
+</div>
+
+<footer>Corps Haven — a community board for NYSC corps members.</footer>
+
+<script src="config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function loadStats() {
+    const [housing, placements] = await Promise.all([
+      client.from("housing_listings").select("*", { count: "exact", head: true }).eq("status", "approved"),
+      client.from("placements").select("*", { count: "exact", head: true }).eq("status", "approved")
+    ]);
+    document.getElementById("stat-housing").textContent = housing.count ?? "0";
+    document.getElementById("stat-placements").textContent = placements.count ?? "0";
+  }
+  loadStats();
+</script>
+
+</body>
+</html>
