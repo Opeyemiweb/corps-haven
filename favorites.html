@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saved — Corps Haven</title>
+<meta name="description" content="Your saved housing and placement listings on Corps Haven.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<header class="site-header">
+  <a class="brand" href="index.html">Corps Haven</a>
+  <button class="nav-toggle" onclick="document.querySelector('nav').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="housing.html">Housing</a>
+    <a href="placements.html">Placements</a>
+    <a href="favorites.html" class="active">Saved</a>
+    <a href="submit.html">Submit</a>
+  </nav>
+</header>
+
+<main>
+  <div class="section-heading">Saved listings</div>
+  <p class="section-sub">Saved on this device only — no account needed, but they won't follow you to another phone or browser.</p>
+  <div id="list" class="listing-grid"><p class="loading">Loading your saved listings…</p></div>
+</main>
+
+<footer>Corps Haven — a community board for NYSC corps members.</footer>
+
+<script src="config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const HOUSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1V15a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.5a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V10"/></svg>`;
+  const BRIEFCASE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>`;
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[m]));
+  }
+
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem("ch_favorites") || "[]"); }
+    catch { return []; }
+  }
+
+  function removeFavorite(kind, id) {
+    let favs = getFavorites().filter(f => !(f.kind === kind && f.id === id));
+    localStorage.setItem("ch_favorites", JSON.stringify(favs));
+    loadSaved();
+  }
+
+  async function loadSaved() {
+    const el = document.getElementById("list");
+    const favs = getFavorites();
+
+    if (!favs.length) {
+      el.innerHTML = `<p class="empty">Nothing saved yet. Tap "Save" on any <a href="housing.html">housing</a> or <a href="placements.html">placement</a> listing to keep it here.</p>`;
+      return;
+    }
+
+    const housingIds = favs.filter(f => f.kind === "housing").map(f => f.id);
+    const placementIds = favs.filter(f => f.kind === "placement").map(f => f.id);
+
+    const [housingRes, placementRes] = await Promise.all([
+      housingIds.length
+        ? client.from("housing_listings").select("*").in("id", housingIds)
+        : Promise.resolve({ data: [] }),
+      placementIds.length
+        ? client.from("placements").select("*").in("id", placementIds)
+        : Promise.resolve({ data: [] })
+    ]);
+
+    const rows = [];
+
+    (housingRes.data || []).forEach(item => rows.push(`
+      <div class="listing-card">
+        ${item.image_url ? `<img class="listing-card-media" src="${escapeHtml(item.image_url)}" alt="" loading="lazy">` : `<div class="listing-card-media placeholder">${HOUSE_ICON}</div>`}
+        <div class="listing-card-body">
+          <span class="listing-badge">${escapeHtml(item.house_type)}</span>
+          <div class="listing-card-price">₦${Number(item.price).toLocaleString()}</div>
+          <h3 class="listing-card-title">${escapeHtml(item.title)}</h3>
+          <div class="listing-card-location">${escapeHtml(item.area)}</div>
+          <div class="card-actions">
+            <button onclick="removeFavorite('housing','${item.id}')">Remove</button>
+          </div>
+        </div>
+      </div>
+    `));
+
+    (placementRes.data || []).forEach(item => rows.push(`
+      <div class="listing-card">
+        <div class="listing-card-media placeholder">${BRIEFCASE_ICON}</div>
+        <div class="listing-card-body">
+          <span class="listing-badge">${escapeHtml(item.industry)}</span>
+          <h3 class="listing-card-title">${escapeHtml(item.company_name)}</h3>
+          <div class="listing-card-location">${escapeHtml(item.area)}</div>
+          <div class="card-actions">
+            <button onclick="removeFavorite('placement','${item.id}')">Remove</button>
+          </div>
+        </div>
+      </div>
+    `));
+
+    el.innerHTML = rows.length ? rows.join("") : `<p class="empty">Your saved listings may have been removed or are no longer approved.</p>`;
+  }
+
+  loadSaved();
+</script>
+
+</body>
+</html>

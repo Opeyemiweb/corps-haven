@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corps Haven — Housing & Placements for NYSC Corps Members</title>
+<meta name="description" content="Corps Haven — find verified housing and open placements near your NYSC Place of Primary Assignment, shared by corps members for corps members.">
+<meta property="og:title" content="Corps Haven — Housing & Placements for NYSC Corps Members">
+<meta property="og:description" content="Find verified housing and open placements near your NYSC PPA, shared by corps members for corps members.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<header class="site-header">
+  <a class="brand" href="index.html">Corps Haven</a>
+  <button class="nav-toggle" onclick="document.querySelector('nav').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+  <nav>
+    <a href="index.html" class="active">Home</a>
+    <a href="housing.html">Housing</a>
+    <a href="placements.html">Placements</a>
+    <a href="favorites.html">Saved</a>
+    <a href="submit.html">Submit</a>
+  </nav>
+</header>
+
+<div class="hero" style="background-image: linear-gradient(rgba(15,13,10,0.55), rgba(15,13,10,0.85)), url('https://images.unsplash.com/photo-1543414347-1c348021f279?w=1600&q=80&auto=format&fit=crop');">
+<div class="hero-inner">
+  <div class="hero-kicker">FOR NYSC CORPS MEMBERS</div>
+  <h1>A place to<br>land, and <span class="accent">work<br>that fits.</span></h1>
+  <p>Housing and placements shared directly by corps members who've already found what you're looking for — reviewed before they go live.</p>
+
+  <div class="hero-search">
+    <input id="hero-search-input" type="text" placeholder="Search by area — e.g. Awka, Lekki…">
+    <select id="hero-type-select">
+      <option value="">Any house type</option>
+      <option>Self-contain</option>
+      <option>1 Bedroom</option>
+      <option>2 Bedroom</option>
+      <option>3 Bedroom</option>
+      <option>Shared Apartment</option>
+    </select>
+    <button onclick="heroSearch()">Search housing</button>
+  </div>
+  <div class="hero-actions">
+    <a href="housing.html" class="btn btn-outline">Browse all housing</a>
+    <a href="placements.html" class="btn btn-outline">Browse placements</a>
+  </div>
+</div>
+</div>
+
+<div class="stats-strip">
+  <div class="stats-grid">
+    <div>
+      <div class="stat-num" id="stat-housing">—</div>
+      <div class="stat-label">Housing listings live</div>
+    </div>
+    <div>
+      <div class="stat-num" id="stat-placements">—</div>
+      <div class="stat-label">Open placements</div>
+    </div>
+    <div>
+      <div class="stat-num" id="stat-total">—</div>
+      <div class="stat-label">Total submissions from corps members</div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div id="new-banner"></div>
+
+  <div class="section-heading">Browse by house type</div>
+  <p class="section-sub">Jump straight into the type that fits what you're looking for.</p>
+  <div class="type-tiles" id="type-tiles"><p class="loading">Loading…</p></div>
+
+  <div class="split-section">
+    <div class="split-media">
+      <img src="https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=900&q=80&auto=format&fit=crop" alt="Comfortable apartment living room">
+      <div class="credit">Photo: Francesca Tosolini on Unsplash</div>
+    </div>
+    <div class="split-content">
+      <h2>Quality places to live</h2>
+      <p>Every housing listing is checked before it goes live — no scam addresses, no ghost landlords, no surprises when you show up.</p>
+      <ul class="split-list">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Verified by an admin before publishing</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Real prices, real photos where available</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Direct contact — no agent fees</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-heading">Featured housing</div>
+  <p class="section-sub">Recently approved — <a href="housing.html">see all housing →</a></p>
+  <div id="featured-housing" class="listing-grid"><p class="loading">Loading…</p></div>
+
+  <div class="split-section reverse">
+    <div class="split-media">
+      <img src="https://images.unsplash.com/photo-1441109296207-fd911f7cd5e5?w=900&q=80&auto=format&fit=crop" alt="Workspace with laptop">
+      <div class="credit">Photo: Adeolu Eletu on Unsplash</div>
+    </div>
+    <div class="split-content">
+      <h2>Real opportunities to work</h2>
+      <p>Companies genuinely open to hosting corps members — roles, requirements, and a real person to contact, not a job-board dead end.</p>
+      <ul class="split-list">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Posted by companies or corps members directly</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Clear role descriptions and requirements</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Reach out the same day you find it</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-heading">Featured placements</div>
+  <p class="section-sub">Companies currently open — <a href="placements.html">see all placements →</a></p>
+  <div id="featured-placements" class="listing-grid"><p class="loading">Loading…</p></div>
+
+  <div class="section-heading">Explore by area</div>
+  <p class="section-sub">Popular areas from current listings.</p>
+  <div class="area-tags" id="area-tags"><p class="loading">Loading…</p></div>
+
+  <div class="badge-strip" style="margin-top:40px;">
+    <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Admin reviewed</div>
+    <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Free to use</div>
+    <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Direct contact, no middleman</div>
+    <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Community submitted</div>
+  </div>
+
+  <div class="section-heading">How it works</div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div><h3>Browse or submit</h3><p>Look through housing and placement listings, or submit your own to help the next corps member.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div><h3>It gets reviewed</h3><p>An admin checks every submission before it goes public, to keep listings accurate and safe.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div><h3>Connect directly</h3><p>Once approved, tap "Show contact" to reach out — no accounts, no waiting.</p></div></div>
+  </div>
+</main>
+
+<div class="cta-band">
+  <h2>Know a place, or a placement?</h2>
+  <p>If it helped you, it can help the next corps member too. Takes under two minutes to submit.</p>
+  <a href="submit.html" class="btn btn-primary">Submit a listing</a>
+</div>
+
+<footer>Corps Haven — a community board for NYSC corps members. <br>Hero photo: Structures of Lagos on Unsplash.</footer>
+
+<script src="config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const HOUSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1V15a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.5a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V10"/></svg>`;
+  const BRIEFCASE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>`;
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[m]));
+  }
+
+  function heroSearch() {
+    const search = document.getElementById("hero-search-input").value.trim();
+    const type = document.getElementById("hero-type-select").value;
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (type) params.set("type", type);
+    window.location.href = "housing.html" + (params.toString() ? "?" + params.toString() : "");
+  }
+
+  const HOUSE_TYPES = ["Self-contain", "1 Bedroom", "2 Bedroom", "3 Bedroom", "Shared Apartment", "Other"];
+  document.getElementById("type-tiles").innerHTML = HOUSE_TYPES.map(t => `
+    <a href="housing.html?type=${encodeURIComponent(t)}" class="type-tile">
+      ${HOUSE_ICON}
+      <span>${escapeHtml(t)}</span>
+    </a>
+  `).join("");
+
+  function renderHousingCard(item) {
+    return `
+      <div class="listing-card">
+        ${item.image_url ? `<img class="listing-card-media" src="${escapeHtml(item.image_url)}" alt="" loading="lazy">` : `<div class="listing-card-media placeholder">${HOUSE_ICON}</div>`}
+        <div class="listing-card-body">
+          <span class="listing-badge">${escapeHtml(item.house_type)}</span>
+          <div class="listing-card-price">₦${Number(item.price).toLocaleString()}</div>
+          <h3 class="listing-card-title">${escapeHtml(item.title)}</h3>
+          <div class="listing-card-location">${escapeHtml(item.area)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPlacementCard(item) {
+    return `
+      <div class="listing-card">
+        <div class="listing-card-media placeholder">${BRIEFCASE_ICON}</div>
+        <div class="listing-card-body">
+          <span class="listing-badge">${escapeHtml(item.industry)}</span>
+          <h3 class="listing-card-title">${escapeHtml(item.company_name)}</h3>
+          <div class="listing-card-location">${escapeHtml(item.area)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadFeatured() {
+    const [housing, placements] = await Promise.all([
+      client.from("housing_listings").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(3),
+      client.from("placements").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(3)
+    ]);
+
+    const housingEl = document.getElementById("featured-housing");
+    if (housing.error || !housing.data.length) {
+      housingEl.innerHTML = `<p class="empty">No housing listings yet — <a href="submit.html">be the first to submit one</a>.</p>`;
+    } else {
+      housingEl.innerHTML = housing.data.map(renderHousingCard).join("");
+    }
+
+    const placementsEl = document.getElementById("featured-placements");
+    if (placements.error || !placements.data.length) {
+      placementsEl.innerHTML = `<p class="empty">No placements yet — <a href="submit.html">be the first to submit one</a>.</p>`;
+    } else {
+      placementsEl.innerHTML = placements.data.map(renderPlacementCard).join("");
+    }
+  }
+
+  async function loadAreas() {
+    const el = document.getElementById("area-tags");
+    const { data, error } = await client
+      .from("housing_listings")
+      .select("area")
+      .eq("status", "approved");
+
+    if (error || !data.length) {
+      el.innerHTML = `<p class="empty">Areas will show here once listings come in.</p>`;
+      return;
+    }
+    const counts = {};
+    data.forEach(r => { counts[r.area] = (counts[r.area] || 0) + 1; });
+    const areas = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 10);
+
+    el.innerHTML = areas.map(area => `
+      <a href="housing.html?search=${encodeURIComponent(area)}" class="area-tag">${escapeHtml(area)} <span>(${counts[area]})</span></a>
+    `).join("");
+  }
+
+  async function loadStats() {
+    const [housing, placements, totalHousing, totalPlacements] = await Promise.all([
+      client.from("housing_listings").select("*", { count: "exact", head: true }).eq("status", "approved"),
+      client.from("placements").select("*", { count: "exact", head: true }).eq("status", "approved"),
+      client.from("housing_listings").select("*", { count: "exact", head: true }),
+      client.from("placements").select("*", { count: "exact", head: true })
+    ]);
+    document.getElementById("stat-housing").textContent = housing.count ?? "0";
+    document.getElementById("stat-placements").textContent = placements.count ?? "0";
+    document.getElementById("stat-total").textContent = (totalHousing.count ?? 0) + (totalPlacements.count ?? 0);
+  }
+
+  async function checkNewSinceLastVisit() {
+    const lastVisit = localStorage.getItem("ch_last_visit");
+    const now = new Date().toISOString();
+    if (lastVisit) {
+      const [newHousing, newPlacements] = await Promise.all([
+        client.from("housing_listings").select("*", { count: "exact", head: true }).eq("status", "approved").gt("created_at", lastVisit),
+        client.from("placements").select("*", { count: "exact", head: true }).eq("status", "approved").gt("created_at", lastVisit)
+      ]);
+      const newCount = (newHousing.count ?? 0) + (newPlacements.count ?? 0);
+      if (newCount > 0) {
+        document.getElementById("new-banner").innerHTML = `<div class="new-banner">${newCount} new listing${newCount === 1 ? "" : "s"} since your last visit.</div>`;
+      }
+    }
+    localStorage.setItem("ch_last_visit", now);
+  }
+
+  loadStats();
+  loadFeatured();
+  loadAreas();
+  checkNewSinceLastVisit();
+</script>
+
+</body>
+</html>

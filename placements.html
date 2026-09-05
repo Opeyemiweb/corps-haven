@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Placements — Corps Haven</title>
+<meta name="description" content="Browse companies open to hosting NYSC corps members — roles, requirements, and direct contact details, reviewed by the community.">
+<meta property="og:title" content="Placements — Corps Haven">
+<meta property="og:description" content="Companies open to hosting NYSC corps members.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<header class="site-header">
+  <a class="brand" href="index.html">Corps Haven</a>
+  <button class="nav-toggle" onclick="document.querySelector('nav').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="housing.html">Housing</a>
+    <a href="placements.html" class="active">Placements</a>
+    <a href="favorites.html">Saved</a>
+    <a href="submit.html">Submit</a>
+  </nav>
+</header>
+
+<main>
+  <div class="section-heading">Placements</div>
+  <p class="section-sub">Companies open to hosting corps members — tap "Contact" to reach out.</p>
+
+  <div class="filter-bar">
+    <input id="f-search" type="text" placeholder="Search company or area…">
+    <input id="f-industry" type="text" placeholder="Industry…">
+    <input type="text" style="visibility:hidden">
+    <input type="text" style="visibility:hidden">
+    <button onclick="resetFilters()">Clear</button>
+  </div>
+  <div class="filter-count" id="filter-count"></div>
+
+  <div id="list" class="listing-grid"><p class="loading">Loading placements…</p></div>
+</main>
+
+<div class="modal-backdrop" id="report-modal">
+  <div class="modal-box">
+    <h3>Report this listing</h3>
+    <p>Let us know if this looks fake, expired, or scam-like. Sent privately to the admin — not shown publicly.</p>
+    <textarea id="report-reason" maxlength="500" placeholder="What's wrong with this listing?"></textarea>
+    <div class="modal-actions">
+      <button class="modal-submit" onclick="submitReport()">Submit report</button>
+      <button class="modal-cancel" onclick="closeReportModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<footer>Corps Haven — a community board for NYSC corps members.</footer>
+
+<script src="config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const BRIEFCASE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>`;
+  const HEART_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6a5.5 5.5 0 0 0-9.3-3.9L12 5.2l-.5-.5A5.5 5.5 0 1 0 3.7 12.4L12 20.7l8.3-8.3a5.5 5.5 0 0 0 .5-3.8Z"/></svg>`;
+  const SHARE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>`;
+  const FLAG_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V4"/><path d="M4 4h13l-2.5 4L17 12H4"/></svg>`;
+
+  let allListings = [];
+  let currentReportId = null;
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[m]));
+  }
+
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem("ch_favorites") || "[]"); }
+    catch { return []; }
+  }
+  function isFavorited(kind, id) {
+    return getFavorites().some(f => f.kind === kind && f.id === id);
+  }
+  function toggleFavorite(kind, id, btn) {
+    let favs = getFavorites();
+    const exists = favs.some(f => f.kind === kind && f.id === id);
+    favs = exists ? favs.filter(f => !(f.kind === kind && f.id === id)) : [...favs, { kind, id }];
+    localStorage.setItem("ch_favorites", JSON.stringify(favs));
+    btn.classList.toggle("is-saved", !exists);
+  }
+
+  function openReportModal(id) {
+    currentReportId = id;
+    document.getElementById("report-reason").value = "";
+    document.getElementById("report-modal").classList.add("open");
+  }
+  function closeReportModal() {
+    document.getElementById("report-modal").classList.remove("open");
+    currentReportId = null;
+  }
+  async function submitReport() {
+    const reason = document.getElementById("report-reason").value.trim();
+    if (reason.length < 3) { alert("Please describe the issue briefly."); return; }
+    const { error } = await client.from("reports").insert({ listing_type: "placement", listing_id: currentReportId, reason });
+    if (error) { alert("Couldn't submit report: " + error.message); return; }
+    closeReportModal();
+    alert("Thanks — an admin will review this.");
+  }
+
+  function revealContact(btn, phone, email) {
+    const text = [phone, email].filter(Boolean).join(" · ");
+    btn.outerHTML = `<div class="contact-revealed">${escapeHtml(text)}</div>`;
+  }
+
+  function whatsappUrl(item) {
+    const contact = item.contact_phone || item.contact_email || "";
+    const text = `Check out this placement on Corps Haven: ${item.company_name} — ${item.industry}, ${item.area}. Contact: ${contact}`;
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }
+
+  function renderListings(items) {
+    const el = document.getElementById("list");
+    document.getElementById("filter-count").textContent = `${items.length} placement${items.length === 1 ? "" : "s"} found`;
+
+    if (!items.length) {
+      el.innerHTML = `<p class="empty">No placements match your filters. Try clearing them, or <a href="submit.html">submit one</a>.</p>`;
+      return;
+    }
+    el.innerHTML = items.map(item => `
+      <div class="listing-card">
+        <div class="listing-card-media placeholder">${BRIEFCASE_ICON}</div>
+        <div class="listing-card-body">
+          <span class="listing-badge">${escapeHtml(item.industry)}</span>
+          <h3 class="listing-card-title">${escapeHtml(item.company_name)}</h3>
+          <div class="listing-card-location">${escapeHtml(item.area)}</div>
+          <div class="listing-card-desc">${escapeHtml(item.role_description)}</div>
+          ${item.requirements ? `<div class="listing-card-desc"><strong>Requirements:</strong> ${escapeHtml(item.requirements)}</div>` : ""}
+          <button class="contact-reveal-btn" onclick="revealContact(this, '${escapeHtml(item.contact_phone || '')}', '${escapeHtml(item.contact_email || '')}')">Show contact</button>
+          <div class="card-actions">
+            <button class="save-btn ${isFavorited('placement', item.id) ? 'is-saved' : ''}" onclick="toggleFavorite('placement','${item.id}', this)">${HEART_ICON} Save</button>
+            <a href="${whatsappUrl(item)}" target="_blank" rel="noopener">${SHARE_ICON} Share</a>
+            <button onclick="openReportModal('${item.id}')">${FLAG_ICON} Report</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function applyFilters() {
+    const search = document.getElementById("f-search").value.trim().toLowerCase();
+    const industry = document.getElementById("f-industry").value.trim().toLowerCase();
+
+    const filtered = allListings.filter(item => {
+      const matchesSearch = !search || item.company_name.toLowerCase().includes(search) || item.area.toLowerCase().includes(search);
+      const matchesIndustry = !industry || item.industry.toLowerCase().includes(industry);
+      return matchesSearch && matchesIndustry;
+    });
+    renderListings(filtered);
+  }
+
+  function resetFilters() {
+    document.getElementById("f-search").value = "";
+    document.getElementById("f-industry").value = "";
+    applyFilters();
+  }
+
+  document.getElementById("f-search").addEventListener("input", applyFilters);
+  document.getElementById("f-industry").addEventListener("input", applyFilters);
+
+  function applyUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search")) document.getElementById("f-search").value = params.get("search");
+    if (params.get("industry")) document.getElementById("f-industry").value = params.get("industry");
+  }
+
+  async function loadPlacements() {
+    const { data, error } = await client
+      .from("placements")
+      .select("*")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      document.getElementById("list").innerHTML = `<p class="empty">Couldn't load placements: ${error.message}</p>`;
+      return;
+    }
+    allListings = data;
+    applyUrlParams();
+    applyFilters();
+  }
+
+  loadPlacements();
+</script>
+
+</body>
+</html>
