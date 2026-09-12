@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corps Haven — Admin</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  #app-view { display: none; }
+  main { max-width: 760px; }
+  .section-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-black); margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<div id="login-view">
+  <h2>Corps Haven admin</h2>
+  <input id="email" type="email" placeholder="Admin email" autocomplete="username">
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+  <button onclick="login()">Log in</button>
+  <div id="login-error"></div>
+</div>
+
+<div id="app-view">
+  <header class="site-header admin-header">
+    <span class="brand">Corps Haven — Pending Approvals</span>
+    <button onclick="logout()">Log out</button>
+  </header>
+  <main>
+    <div class="section-label">Housing listings</div>
+    <div id="housing-list"><p class="empty">Loading…</p></div>
+
+    <div class="section-label">Placements</div>
+    <div id="placements-list"><p class="empty">Loading…</p></div>
+
+    <div class="section-label">Reported listings</div>
+    <div id="reports-list"><p class="empty">Loading…</p></div>
+
+    <div class="section-label">Manage live listings</div>
+    <p style="font-size:12px; color:var(--ink-soft); margin:-6px 0 12px;">Currently approved and visible to the public. Deleting hides it immediately — it can be restored from the database if needed.</p>
+    <div id="manage-housing-list"><p class="empty">Loading…</p></div>
+    <div id="manage-placements-list"><p class="empty">Loading…</p></div>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script>
+  // Reads SUPABASE_URL and SUPABASE_ANON_KEY from config.js
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const errorEl = document.getElementById("login-error");
+    errorEl.textContent = "";
+
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+      errorEl.textContent = "Login failed: " + error.message;
+      return;
+    }
+    showApp();
+  }
+
+  async function logout() {
+    await client.auth.signOut();
+    document.getElementById("app-view").style.display = "none";
+    document.getElementById("login-view").style.display = "block";
+  }
+
+  async function showApp() {
+    document.getElementById("login-view").style.display = "none";
+    document.getElementById("app-view").style.display = "block";
+    await Promise.all([loadHousing(), loadPlacements(), loadReports(), loadManageHousing(), loadManagePlacements()]);
+  }
+
+  async function loadHousing() {
+    const el = document.getElementById("housing-list");
+    const { data, error } = await client
+      .from("housing_listings")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      el.innerHTML = `<p class="empty">Couldn't load housing listings: ${error.message}</p>`;
+      return;
+    }
+    if (!data.length) {
+      el.innerHTML = `<p class="empty">No pending housing listings.</p>`;
+      return;
+    }
+    el.innerHTML = data.map(item => `
+      <div class="card" id="housing-${item.id}">
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.area)} · ${escapeHtml(item.house_type)} · ₦${Number(item.price).toLocaleString()}</p>
+        <p>${escapeHtml(item.description || "")}</p>
+        <div class="meta">Contact: ${escapeHtml(item.contact_phone)}</div>
+        ${item.reviewed_by ? `<div class="meta">Last reviewed by ${escapeHtml(item.reviewed_by)}</div>` : ""}
+        <div class="actions">
+          <button class="approve" onclick="reviewItem('housing','${item.id}','approved','housing-${item.id}')">Approve</button>
+          <button class="reject" onclick="reviewItem('housing','${item.id}','rejected','housing-${item.id}')">Reject</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function loadPlacements() {
+    const el = document.getElementById("placements-list");
+    const { data, error } = await client
+      .from("placements")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      el.innerHTML = `<p class="empty">Couldn't load placements: ${error.message}</p>`;
+      return;
+    }
+    if (!data.length) {
+      el.innerHTML = `<p class="empty">No pending placements.</p>`;
+      return;
+    }
+    el.innerHTML = data.map(item => `
+      <div class="card" id="placement-${item.id}">
+        <h3>${escapeHtml(item.company_name)}</h3>
+        <p>${escapeHtml(item.industry)} · ${escapeHtml(item.area)}</p>
+        <p>${escapeHtml(item.role_description)}</p>
+        <div class="meta">${escapeHtml(item.contact_phone || "")} ${item.contact_email ? "· " + escapeHtml(item.contact_email) : ""}</div>
+        ${item.reviewed_by ? `<div class="meta">Last reviewed by ${escapeHtml(item.reviewed_by)}</div>` : ""}
+        <div class="actions">
+          <button class="approve" onclick="reviewItem('placement','${item.id}','approved','placement-${item.id}')">Approve</button>
+          <button class="reject" onclick="reviewItem('placement','${item.id}','rejected','placement-${item.id}')">Reject</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function reviewItem(kind, id, status, cardId) {
+    let reason = null;
+    if (status === "rejected") {
+      reason = prompt("Reason for rejecting (shown in your own records only):", "");
+      if (reason === null) return; // user cancelled
+    }
+
+    const fn = kind === "housing" ? "review_housing" : "review_placement";
+    const { error } = await client.rpc(fn, {
+      p_id: id,
+      p_status: status,
+      p_reason: reason
+    });
+
+    if (error) {
+      alert("Update failed: " + error.message);
+      return;
+    }
+    document.getElementById(cardId).remove();
+  }
+
+  async function loadReports() {
+    const el = document.getElementById("reports-list");
+    const { data, error } = await client
+      .from("reports")
+      .select("*")
+      .eq("status", "open")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      el.innerHTML = `<p class="empty">Couldn't load reports: ${error.message}</p>`;
+      return;
+    }
+    if (!data.length) {
+      el.innerHTML = `<p class="empty">No open reports.</p>`;
+      return;
+    }
+    el.innerHTML = data.map(item => `
+      <div class="card" id="report-${item.id}">
+        <h3>${item.listing_type === "housing" ? "Housing listing" : "Placement"} reported</h3>
+        <p>${escapeHtml(item.reason)}</p>
+        <div class="meta">Listing ID: ${item.listing_id}</div>
+        <div class="actions">
+          <button class="reject" onclick="takeDownReported('${item.listing_type}','${item.listing_id}','${item.id}')">Take down listing</button>
+          <button class="approve" onclick="dismissReport('${item.id}')">Dismiss report</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function dismissReport(reportId) {
+    const { error } = await client.from("reports").update({ status: "dismissed" }).eq("id", reportId);
+    if (error) { alert("Failed: " + error.message); return; }
+    document.getElementById(`report-${reportId}`).remove();
+  }
+
+  async function takeDownReported(kind, listingId, reportId) {
+    const fn = kind === "housing" ? "review_housing" : "review_placement";
+    const { error: reviewError } = await client.rpc(fn, {
+      p_id: listingId,
+      p_status: "rejected",
+      p_reason: "Removed after being reported"
+    });
+    if (reviewError) { alert("Failed to remove listing: " + reviewError.message); return; }
+
+    await client.from("reports").update({ status: "resolved" }).eq("id", reportId);
+    document.getElementById(`report-${reportId}`).remove();
+    // Also refresh the pending lists in case it was still pending
+    loadHousing();
+    loadPlacements();
+  }
+
+  async function loadManageHousing() {
+    const el = document.getElementById("manage-housing-list");
+    const { data, error } = await client
+      .from("housing_listings")
+      .select("*")
+      .eq("status", "approved")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      el.innerHTML = `<p class="empty">Couldn't load listings: ${error.message}</p>`;
+      return;
+    }
+    if (!data.length) {
+      el.innerHTML = `<p class="empty">No live housing listings.</p>`;
+      return;
+    }
+    el.innerHTML = data.map(item => `
+      <div class="card" id="manage-housing-${item.id}">
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.area)} · ${escapeHtml(item.house_type)} · ₦${Number(item.price).toLocaleString()}</p>
+        <div class="actions">
+          <button class="reject" onclick="deleteListing('housing_listings','${item.id}','manage-housing-${item.id}')">Delete</button>
+          <button class="reject" onclick="hardDeleteListing('housing_listings','${item.id}','manage-housing-${item.id}')">Delete Permanently</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function loadManagePlacements() {
+    const el = document.getElementById("manage-placements-list");
+    const { data, error } = await client
+      .from("placements")
+      .select("*")
+      .eq("status", "approved")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      el.innerHTML = `<p class="empty">Couldn't load placements: ${error.message}</p>`;
+      return;
+    }
+    if (!data.length) {
+      el.innerHTML = `<p class="empty">No live placements.</p>`;
+      return;
+    }
+    el.innerHTML = data.map(item => `
+      <div class="card" id="manage-placement-${item.id}">
+        <h3>${escapeHtml(item.company_name)}</h3>
+        <p>${escapeHtml(item.industry)} · ${escapeHtml(item.area)}</p>
+        <div class="actions">
+          <button class="reject" onclick="deleteListing('placements','${item.id}','manage-placement-${item.id}')">Delete</button>
+          <button class="reject" onclick="hardDeleteListing('placements','${item.id}','manage-placement-${item.id}')">Delete Permanently</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function deleteListing(table, id, cardId) {
+    if (!confirm("Delete this listing? It will disappear from the public site immediately.")) return;
+
+    const { error } = await client
+      .from(table)
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) {
+      alert("Delete failed: " + error.message);
+      return;
+    }
+    document.getElementById(cardId).remove();
+  }
+
+  async function hardDeleteListing(table, id, cardId) {
+    const confirmed = confirm(
+      "PERMANENTLY delete this listing?\n\nThis CANNOT be undone — the record will be completely erased from the database, not just hidden."
+    );
+    if (!confirmed) return;
+
+    const { error } = await client.from(table).delete().eq("id", id);
+
+    if (error) {
+      alert("Permanent delete failed: " + error.message + "\n\n(This action requires super_admin — check you're logged in as the right account.)");
+      return;
+    }
+    document.getElementById(cardId).remove();
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[m]));
+  }
+
+  // Resume session on reload
+  client.auth.getSession().then(({ data }) => {
+    if (data.session) showApp();
+  });
+</script>
+</body>
+</html>
