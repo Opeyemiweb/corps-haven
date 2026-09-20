@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit — Corps Haven</title>
+<meta name="description" content="Submit a housing listing or placement to help fellow NYSC corps members.">
+<meta property="og:title" content="Submit a Listing — Corps Haven">
+<meta property="og:description" content="Submit a housing listing or placement to help fellow NYSC corps members.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://images.unsplash.com/photo-1543414347-1c348021f279?w=1200&q=80&auto=format&fit=crop">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<script src="loader.js"></script>
+
+<header class="site-header">
+  <a class="brand" href="index.html">Corps Haven</a>
+  <button class="nav-toggle" onclick="document.querySelector('nav').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="housing.html">Housing</a>
+    <a href="placements.html">Placements</a>
+    <a href="favorites.html">Saved</a>
+    <a href="submit.html" class="active">Submit</a>
+    <a href="about.html">About</a>
+  </nav>
+</header>
+
+<main class="narrow">
+  <div class="section-heading">Submit a listing</div>
+  <p class="section-sub">Reviewed by an admin before it appears publicly — usually doesn't take long.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('housing')">Housing</button>
+    <button class="tab-btn" onclick="switchTab('placement')">Placement</button>
+  </div>
+
+  <div id="housing-panel" class="tab-panel active">
+    <form id="housing-form">
+
+      <div class="form-section">
+        <div class="form-section-title">Basic information</div>
+        <label for="h-title">Title</label>
+        <input id="h-title" required maxlength="120" placeholder="e.g. Self-contain near NYSC Secretariat">
+
+        <label for="h-area">Area / Location</label>
+        <input id="h-area" required maxlength="80" placeholder="e.g. Awka, Anambra">
+
+        <div class="form-row">
+          <div>
+            <label for="h-type">House type</label>
+            <select id="h-type" required>
+              <option value="">Select type</option>
+              <option>Self-contain</option>
+              <option>1 Bedroom</option>
+              <option>2 Bedroom</option>
+              <option>3 Bedroom</option>
+              <option>Shared Apartment</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="h-bathrooms">Bathrooms</label>
+            <input id="h-bathrooms" type="number" min="0" max="20" placeholder="e.g. 1">
+          </div>
+        </div>
+
+        <label for="h-description">Description</label>
+        <textarea id="h-description" maxlength="2000" placeholder="Details about the place, condition, what's included, etc."></textarea>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Costs</div>
+        <div class="form-section-sub">Leave any that don't apply at ₦0.</div>
+        <label for="h-price">Rent (₦ per year, unless stated otherwise)</label>
+        <input id="h-price" type="number" required min="1" placeholder="e.g. 150000">
+
+        <div class="form-row">
+          <div>
+            <label for="h-caution">Caution fee (₦)</label>
+            <input id="h-caution" type="number" min="0" placeholder="0">
+          </div>
+          <div>
+            <label for="h-agency">Agency fee (₦)</label>
+            <input id="h-agency" type="number" min="0" placeholder="0">
+          </div>
+        </div>
+        <label for="h-agreement">Agreement fee (₦)</label>
+        <input id="h-agreement" type="number" min="0" placeholder="0">
+
+        <div class="cost-total">
+          <span>Total move-in cost</span>
+          <span id="h-total-display">₦0</span>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Property details</div>
+        <div class="form-row">
+          <div>
+            <label for="h-available">Available from</label>
+            <input id="h-available" type="date">
+          </div>
+          <div>
+            <label for="h-tenancy">Minimum tenancy</label>
+            <input id="h-tenancy" maxlength="60" placeholder="e.g. 6 months">
+          </div>
+        </div>
+        <div class="checkbox-item" style="margin-top:14px;">
+          <input type="checkbox" id="h-furnished">
+          <label for="h-furnished" style="margin:0;">Furnished</label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Utilities</div>
+        <label for="h-electricity">Electricity</label>
+        <select id="h-electricity">
+          <option value="">Not specified</option>
+          <option>Prepaid meter</option>
+          <option>Estimated billing</option>
+          <option>Generator only</option>
+          <option>NEPA + Generator</option>
+          <option>Solar</option>
+          <option>Other</option>
+        </select>
+        <div class="checkbox-grid">
+          <div class="checkbox-item"><input type="checkbox" id="h-borehole"><label for="h-borehole" style="margin:0;">Borehole / reliable water</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="h-generator"><label for="h-generator" style="margin:0;">Generator provided</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="h-internet"><label for="h-internet" style="margin:0;">Internet available nearby</label></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Environment</div>
+        <div class="checkbox-grid">
+          <div class="checkbox-item"><input type="checkbox" id="h-gated"><label for="h-gated" style="margin:0;">Gated compound</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="h-flood"><label for="h-flood" style="margin:0;">Known to flood</label></div>
+        </div>
+        <label for="h-landmark" style="margin-top:14px;">Nearest landmark</label>
+        <input id="h-landmark" maxlength="120" placeholder="e.g. 5 min walk from NYSC Secretariat">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Photo & contact</div>
+        <label for="h-image">Photos (optional, up to 5)</label>
+        <input id="h-image" type="file" accept="image/*" multiple>
+        <div class="hint">JPG or PNG, under 5MB each. Listings with photos get noticed faster.</div>
+        <div id="h-image-preview-grid" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+
+        <label for="h-phone">Contact phone number</label>
+        <input id="h-phone" required placeholder="e.g. 08012345678">
+        <div class="hint">Digits only, 10–14 characters. Shown publicly so people can reach you.</div>
+      </div>
+
+      <button type="submit" id="h-submit-btn">Submit for review</button>
+      <div id="housing-message" class="form-message"></div>
+    </form>
+  </div>
+
+  <div id="placement-panel" class="tab-panel">
+    <form id="placement-form">
+
+      <div class="form-section">
+        <div class="form-section-title">Company & role</div>
+        <label for="p-company">Company name</label>
+        <input id="p-company" required maxlength="120" placeholder="e.g. Greenfield Consulting Ltd">
+
+        <div class="form-row">
+          <div>
+            <label for="p-industry">Industry</label>
+            <input id="p-industry" required maxlength="80" placeholder="e.g. Marketing, Tech, Education">
+          </div>
+          <div>
+            <label for="p-area">Area / Location</label>
+            <input id="p-area" required maxlength="80" placeholder="e.g. Awka, Anambra">
+          </div>
+        </div>
+
+        <label for="p-role-title">Role title</label>
+        <input id="p-role-title" maxlength="120" placeholder="e.g. Data Analyst, ICT Instructor">
+
+        <label for="p-role">Role description</label>
+        <textarea id="p-role" required maxlength="2000" placeholder="What the role involves, expectations, etc."></textarea>
+
+        <label for="p-requirements">Requirements (optional)</label>
+        <textarea id="p-requirements" maxlength="1000" placeholder="Any specific skills, courses, or experience needed"></textarea>
+
+        <label for="p-discipline">Discipline accepted</label>
+        <input id="p-discipline" maxlength="160" placeholder="e.g. Any discipline, or Engineering/CS only">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Openings & timing</div>
+        <div class="form-row">
+          <div>
+            <label for="p-slots">Number of slots</label>
+            <input id="p-slots" type="number" min="1" max="100" placeholder="e.g. 2">
+          </div>
+          <div>
+            <label for="p-deadline">Application deadline</label>
+            <input id="p-deadline" type="date">
+          </div>
+        </div>
+        <div class="checkbox-item" style="margin-top:14px;">
+          <input type="checkbox" id="p-interview">
+          <label for="p-interview" style="margin:0;">Interview required</label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Compensation & benefits</div>
+        <label for="p-stipend">Monthly stipend (₦, if any)</label>
+        <input id="p-stipend" type="number" min="0" placeholder="e.g. 50000">
+        <div class="checkbox-grid">
+          <div class="checkbox-item"><input type="checkbox" id="p-transport"><label for="p-transport" style="margin:0;">Transport allowance</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="p-accommodation"><label for="p-accommodation" style="margin:0;">Accommodation provided</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="p-lunch"><label for="p-lunch" style="margin:0;">Lunch provided</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="p-retention"><label for="p-retention" style="margin:0;">Possible retention after service</label></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Work logistics</div>
+        <div class="form-row">
+          <div>
+            <label for="p-workdays">Work days</label>
+            <input id="p-workdays" maxlength="60" placeholder="e.g. Mon–Fri">
+          </div>
+          <div>
+            <label for="p-workhours">Work hours</label>
+            <input id="p-workhours" maxlength="60" placeholder="e.g. 9am–5pm">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="p-workmode">Work mode</label>
+            <select id="p-workmode">
+              <option value="">Not specified</option>
+              <option>On-site</option>
+              <option>Hybrid</option>
+              <option>Remote</option>
+            </select>
+          </div>
+          <div>
+            <label for="p-dresscode">Dress code</label>
+            <input id="p-dresscode" maxlength="80" placeholder="e.g. Business casual">
+          </div>
+        </div>
+        <label for="p-office">Office address</label>
+        <input id="p-office" maxlength="200" placeholder="Full office address">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Track record</div>
+        <div class="checkbox-grid">
+          <div class="checkbox-item"><input type="checkbox" id="p-ppa-letter"><label for="p-ppa-letter" style="margin:0;">Issues PPA acceptance letters</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="p-previous-corpers"><label for="p-previous-corpers" style="margin:0;">Has accepted corps members before</label></div>
+        </div>
+        <label for="p-last-confirmed" style="margin-top:14px;">Last confirmed accepting corps members</label>
+        <input id="p-last-confirmed" type="date">
+        <div class="hint">If you're not sure, leave this blank.</div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Company registration (optional)</div>
+        <div class="form-section-sub">If provided, this is self-reported by the poster — not yet independently checked by an admin.</div>
+        <label for="p-cac">CAC registration number</label>
+        <input id="p-cac" maxlength="40" placeholder="e.g. RC1234567">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">Contact</div>
+        <label for="p-phone">Contact phone (optional if email given)</label>
+        <input id="p-phone" placeholder="e.g. 08012345678">
+
+        <label for="p-email">Contact email (optional if phone given)</label>
+        <input id="p-email" type="email" placeholder="e.g. hr@company.com">
+        <div class="hint">At least one contact method is required.</div>
+      </div>
+
+      <button type="submit" id="p-submit-btn">Submit for review</button>
+      <div id="placement-message" class="form-message"></div>
+    </form>
+  </div>
+</main>
+
+<footer>
+  Corps Haven — a community board for NYSC corps members, not an official NYSC service.<br>
+  <a href="about.html" style="color:var(--gold-bright);">About</a> · <a href="privacy.html" style="color:var(--gold-bright);">Privacy Policy</a> · <a href="terms.html" style="color:var(--gold-bright);">Terms of Service</a>
+</footer>
+
+<script src="config.js"></script>
+<script>
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/o2ln974s7yu1ocfydq44jimofz3ggzor";
+
+  async function notifyMake(payload) {
+    try {
+      await fetch(MAKE_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error("Notification failed (listing still submitted fine):", err);
+    }
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add("active");
+    document.getElementById(`${tab}-panel`).classList.add("active");
+  }
+
+  function showMessage(elId, text, isError) {
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = "form-message " + (isError ? "error" : "success");
+  }
+
+  const phonePattern = /^\+?[0-9]{10,14}$/;
+
+  // Multi-photo preview
+  document.getElementById("h-image").addEventListener("change", (e) => {
+    const files = Array.from(e.target.files).slice(0, 5);
+    if (e.target.files.length > 5) {
+      showMessage("housing-message", "Only the first 5 photos will be used.", true);
+    }
+    const grid = document.getElementById("h-image-preview-grid");
+    grid.innerHTML = "";
+    files.forEach(file => {
+      const img = document.createElement("img");
+      img.className = "image-preview";
+      img.style.display = "block";
+      img.style.width = "80px";
+      img.style.height = "80px";
+      img.src = URL.createObjectURL(file);
+      grid.appendChild(img);
+    });
+  });
+
+  // Live total move-in cost calculator
+  function updateCostTotal() {
+    const price = Number(document.getElementById("h-price").value) || 0;
+    const caution = Number(document.getElementById("h-caution").value) || 0;
+    const agency = Number(document.getElementById("h-agency").value) || 0;
+    const agreement = Number(document.getElementById("h-agreement").value) || 0;
+    const total = price + caution + agency + agreement;
+    document.getElementById("h-total-display").textContent = "₦" + total.toLocaleString();
+  }
+  ["h-price", "h-caution", "h-agency", "h-agreement"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateCostTotal);
+  });
+
+  async function uploadImagesIfPresent() {
+    const fileInput = document.getElementById("h-image");
+    const files = Array.from(fileInput.files).slice(0, 5);
+    if (!files.length) return [];
+
+    const urls = [];
+    for (const file of files) {
+      const compressedBlob = await compressImage(file, 1200, 0.8);
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+
+      const { error: uploadError } = await client.storage
+        .from("listing-images")
+        .upload(path, compressedBlob, { contentType: "image/jpeg" });
+
+      if (uploadError) {
+        throw new Error("Image upload failed: " + uploadError.message);
+      }
+
+      const { data } = client.storage.from("listing-images").getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+    return urls;
+  }
+
+  function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Compression failed")), "image/jpeg", quality);
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById("housing-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById("h-phone").value.trim();
+    const btn = document.getElementById("h-submit-btn");
+
+    if (!phonePattern.test(phone)) {
+      showMessage("housing-message", "Please enter a valid phone number (10–14 digits).", true);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+
+    try {
+      const { error: rateError } = await client.rpc("enforce_submission_rate_limit", {
+        p_contact: phone,
+        p_table: "housing_listings",
+        p_max_per_day: 3
+      });
+      if (rateError) throw new Error(rateError.message);
+
+      const imageUrls = await uploadImagesIfPresent();
+
+      const { error } = await client.from("housing_listings").insert({
+        title: document.getElementById("h-title").value.trim(),
+        area: document.getElementById("h-area").value.trim(),
+        house_type: document.getElementById("h-type").value,
+        price: Number(document.getElementById("h-price").value),
+        description: document.getElementById("h-description").value.trim(),
+        contact_phone: phone,
+        image_url: imageUrls[0] || null,
+        image_urls: imageUrls.length ? imageUrls : null,
+        status: "pending",
+        bathrooms: document.getElementById("h-bathrooms").value ? Number(document.getElementById("h-bathrooms").value) : null,
+        caution_fee: Number(document.getElementById("h-caution").value) || 0,
+        agency_fee: Number(document.getElementById("h-agency").value) || 0,
+        agreement_fee: Number(document.getElementById("h-agreement").value) || 0,
+        available_from: document.getElementById("h-available").value || null,
+        minimum_tenancy: document.getElementById("h-tenancy").value.trim() || null,
+        is_furnished: document.getElementById("h-furnished").checked,
+        electricity_type: document.getElementById("h-electricity").value || null,
+        has_borehole: document.getElementById("h-borehole").checked,
+        has_generator: document.getElementById("h-generator").checked,
+        internet_available: document.getElementById("h-internet").checked,
+        is_gated: document.getElementById("h-gated").checked,
+        flood_prone: document.getElementById("h-flood").checked,
+        nearest_landmark: document.getElementById("h-landmark").value.trim() || null
+      });
+      if (error) throw new Error(error.message);
+
+      notifyMake({
+        type: "housing",
+        title: document.getElementById("h-title").value.trim(),
+        area: document.getElementById("h-area").value.trim(),
+        price: document.getElementById("h-price").value,
+        phone: phone
+      });
+
+      showMessage("housing-message", "Submitted! Your listing will appear once an admin approves it.", false);
+      document.getElementById("housing-form").reset();
+      document.getElementById("h-image-preview-grid").innerHTML = "";
+      updateCostTotal();
+    } catch (err) {
+      showMessage("housing-message", "Something went wrong: " + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit for review";
+    }
+  });
+
+  document.getElementById("placement-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById("p-phone").value.trim();
+    const email = document.getElementById("p-email").value.trim();
+    const btn = document.getElementById("p-submit-btn");
+
+    if (!phone && !email) {
+      showMessage("placement-message", "Please provide a phone number or an email.", true);
+      return;
+    }
+    if (phone && !phonePattern.test(phone)) {
+      showMessage("placement-message", "Please enter a valid phone number (10–14 digits).", true);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+
+    try {
+      const contactForRateLimit = phone || email;
+      const { error: rateError } = await client.rpc("enforce_submission_rate_limit", {
+        p_contact: contactForRateLimit,
+        p_table: "placements",
+        p_max_per_day: 3
+      });
+      if (rateError) throw new Error(rateError.message);
+
+      const cacNumber = document.getElementById("p-cac").value.trim();
+
+      const { error } = await client.from("placements").insert({
+        company_name: document.getElementById("p-company").value.trim(),
+        industry: document.getElementById("p-industry").value.trim(),
+        area: document.getElementById("p-area").value.trim(),
+        role_description: document.getElementById("p-role").value.trim(),
+        requirements: document.getElementById("p-requirements").value.trim() || null,
+        contact_phone: phone || null,
+        contact_email: email || null,
+        status: "pending",
+        role_title: document.getElementById("p-role-title").value.trim() || null,
+        discipline_accepted: document.getElementById("p-discipline").value.trim() || null,
+        num_slots: document.getElementById("p-slots").value ? Number(document.getElementById("p-slots").value) : 1,
+        application_deadline: document.getElementById("p-deadline").value || null,
+        interview_required: document.getElementById("p-interview").checked,
+        monthly_stipend: document.getElementById("p-stipend").value ? Number(document.getElementById("p-stipend").value) : null,
+        transport_allowance: document.getElementById("p-transport").checked,
+        accommodation_provided: document.getElementById("p-accommodation").checked,
+        lunch_provided: document.getElementById("p-lunch").checked,
+        retention_possible: document.getElementById("p-retention").checked,
+        work_days: document.getElementById("p-workdays").value.trim() || null,
+        work_hours: document.getElementById("p-workhours").value.trim() || null,
+        work_mode: document.getElementById("p-workmode").value || null,
+        dress_code: document.getElementById("p-dresscode").value.trim() || null,
+        office_address: document.getElementById("p-office").value.trim() || null,
+        issues_ppa_letter: document.getElementById("p-ppa-letter").checked,
+        previous_corpers_accepted: document.getElementById("p-previous-corpers").checked,
+        last_confirmed_accepting: document.getElementById("p-last-confirmed").value || null,
+        company_cac_number: cacNumber || null,
+        company_cac_status: cacNumber ? "CAC number provided - unverified by admin" : "Not yet verified"
+      });
+      if (error) throw new Error(error.message);
+
+      notifyMake({
+        type: "placement",
+        company: document.getElementById("p-company").value.trim(),
+        industry: document.getElementById("p-industry").value.trim(),
+        area: document.getElementById("p-area").value.trim(),
+        contact: phone || email
+      });
+
+      showMessage("placement-message", "Submitted! Your listing will appear once an admin approves it.", false);
+      document.getElementById("placement-form").reset();
+    } catch (err) {
+      showMessage("placement-message", "Something went wrong: " + err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Submit for review";
+    }
+  });
+</script>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "YOUR-CLOUDFLARE-TOKEN"}'></script>
+</body>
+</html>
