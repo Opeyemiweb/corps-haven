@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://corps-haven.netlify.app/sitemap.xml
